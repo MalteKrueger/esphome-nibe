@@ -28,7 +28,7 @@ NibeGw::NibeGw(esphome::uart::UARTDevice* serial, esphome::GPIOPin* RS485Directi
   connectionState = false;
   RS485 = serial;
   directionPin = RS485DirectionPin;
-  setCallback(NULL, NULL);
+  setCallback(NULL, NULL, NULL);
 }
 
 void NibeGw::connect()
