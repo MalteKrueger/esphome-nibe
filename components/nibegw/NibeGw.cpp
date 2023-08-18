@@ -229,8 +229,8 @@ void NibeGw::loop()
           {
             case 0:   break; // Ok, but not ready
             case -1:  state = STATE_WAIT_START; break; // Invalid message
-            case -2:   break; // CRC ERROR
-            default:  break;
+            case -2:   state = STATE_WAIT_START; break; // CRC ERROR
+            default:  state = STATE_WAIT_START; break;
           }
 
           if (msglen) {
