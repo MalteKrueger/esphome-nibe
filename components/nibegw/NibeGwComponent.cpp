@@ -6,6 +6,7 @@ NibeGwComponent::NibeGwComponent(esphome::GPIOPin* dir_pin)
 {
     gw_ = new NibeGw(this, dir_pin);
     gw_->setCallback(std::bind(&NibeGwComponent::callback_msg_received, this, std::placeholders::_1, std::placeholders::_2),
+                     std::bind(&NibeGwComponent::callback_msg_all_received, this, std::placeholders::_1, std::placeholders::_2),
                      std::bind(&NibeGwComponent::callback_msg_token_received, this, std::placeholders::_1, std::placeholders::_2));
 #ifdef ENABLE_NIBE_DEBUG
     gw_->setDebugCallback(std::bind(&NibeGwComponent::callback_debug, this, std::placeholders::_1, std::placeholders::_2));
@@ -32,8 +33,33 @@ void NibeGwComponent::callback_msg_received(const byte* const data, int len)
     {
         if (!udp_read_.writeTo(data, len, (uint32_t)std::get<0>(*target), std::get<1>(*target))) {
             ESP_LOGW(TAG, "UDP Packet send failed to %s:%d",
-                          std::get<0>(*target).str().c_str(),
-                          std::get<1>(*target));
+                     std::get<0>(*target).str().c_str(),
+                     std::get<1>(*target));
+        }
+    }
+    for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++)
+    {
+        if (!udp_read_.writeTo(data, len, (uint32_t)std::get<0>(*target), std::get<1>(*target))) {
+            ESP_LOGW(TAG, "UDP Packet send failed to %s:%d",
+                     std::get<0>(*target).str().c_str(),
+                     std::get<1>(*target));
+        }
+    }
+}
+
+void NibeGwComponent::callback_msg_all_received(const byte* const data, int len)
+{
+    if (!is_connected_) {
+        return;
+    }
+
+    ESP_LOGD(TAG, "UDP Packet with %d bytes to send", len);
+    for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++)
+    {
+        if (!udp_read_.writeTo(data, len, (uint32_t)std::get<0>(*target), std::get<1>(*target))) {
+            ESP_LOGW(TAG, "UDP Packet send failed to %s:%d",
+                     std::get<0>(*target).str().c_str(),
+                     std::get<1>(*target));
         }
     }
 }
@@ -122,8 +148,15 @@ void NibeGwComponent::dump_config() {
     for (auto target = udp_targets_.begin(); target != udp_targets_.end(); target++)
     {
         ESP_LOGCONFIG(TAG, " Target: %s:%d",
-                           std::get<0>(*target).str().c_str(),
-                           std::get<1>(*target)
+                      std::get<0>(*target).str().c_str(),
+                      std::get<1>(*target)
+        );
+    }
+    for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++)
+    {
+        ESP_LOGCONFIG(TAG, " Target ALL: %s:%d",
+                      std::get<0>(*target).str().c_str(),
+                      std::get<1>(*target)
         );
     }
     for (auto address = udp_source_ip_.begin(); address != udp_source_ip_.end(); address++) {

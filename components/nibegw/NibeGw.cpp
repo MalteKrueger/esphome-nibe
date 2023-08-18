@@ -60,9 +60,10 @@ void NibeGw::setVerboseLevel(byte level)
   verbose = level;
 }
 
-NibeGw& NibeGw::setCallback(callback_msg_received_type callback_msg_received, callback_msg_token_received_type callback_msg_token_received)
+NibeGw& NibeGw::setCallback(callback_msg_received_type callback_msg_received, callback_msg_all_received_type callback_msg_all_received, callback_msg_token_received_type callback_msg_token_received)
 {
   this->callback_msg_received = callback_msg_received;
+  this->callback_msg_all_received = callback_msg_all_received;
   this->callback_msg_token_received = callback_msg_token_received;
 
   return *this;
@@ -114,7 +115,13 @@ void NibeGw::loop()
           debug(3, debug_buf);
         }
 #endif
-
+        if (b == 0x06)
+        {
+          buffer[0] = b;
+          index = 1;
+          callback_msg_received(buffer, index);
+          state = STATE_WAIT_DATA;
+        }
         if (b == 0x5C)
         {
           buffer[0] = b;
@@ -124,6 +131,17 @@ void NibeGw::loop()
 #ifdef ENABLE_NIBE_DEBUG
           if (debug)
             debug(4, "\nFrame start found\n");
+#endif
+        }
+        if (b == 0xC0)
+        {
+          buffer[0] = b;
+          index = 1;
+          state = STATE_WAIT_C0_DATA;
+
+#ifdef ENABLE_NIBE_DEBUG
+          if (debug)
+            debug(4, "\nFrame C0 start found\n");
 #endif
         }
       }
@@ -170,6 +188,53 @@ void NibeGw::loop()
 
           if (msglen) {
             callback_msg_received(buffer, index);
+          }
+        }
+      }
+      break;
+
+
+    case STATE_WAIT_C0_DATA:
+      if (RS485->available() > 0)
+      {
+        byte b = RS485->read();
+
+#ifdef ENABLE_NIBE_DEBUG
+        if (debug)
+        {
+          sprintf(debug_buf, "%02X", b);
+          debug(3, debug_buf);
+        }
+#endif
+
+        if (index >= MAX_DATA_LEN)
+        {
+          // too long message
+          state = STATE_WAIT_START;
+        }
+        else
+        {
+          buffer[index++] = b;
+          int msglen = checkNibeC0Message(buffer, index);
+
+#ifdef ENABLE_NIBE_DEBUG
+          if (debug)
+          {
+            sprintf(debug_buf, "\ncheckMsg=%d\n", msglen);
+            debug(5, debug_buf);
+          }
+#endif
+
+          switch (msglen)
+          {
+            case 0:   break; // Ok, but not ready
+            case -1:  state = STATE_WAIT_START; break; // Invalid message
+            case -2:   break; // CRC ERROR
+            default:  break;
+          }
+
+          if (msglen) {
+            callback_msg_all_received(buffer, index);
           }
         }
       }
@@ -275,6 +340,59 @@ int NibeGw::checkNibeMessage(const byte* const data, byte len)
       }
 
       return datalen + 6;
+    }
+  }
+
+  return 0;
+}
+/*
+   Return:
+    >0 if valid message received (return message len)
+     0 if ok, but message not ready
+    -1 if invalid message
+    -2 if checksum fails
+*/
+int NibeGw::checkNibeC0Message(const byte* const data, byte len)
+{
+  if (len <= 0)
+    return 0;
+
+  if (len >= 1)
+  {
+    if (data[0] != 0xC0)
+      return -1;
+
+    if (len >= 4)
+    {
+      int datalen = data[3];
+
+      if (len < datalen + 4)
+        return 0;
+
+      byte checksum = 0;
+
+      // calculate XOR checksum
+      for (int i = 0; i < (datalen + 3); i++)
+        checksum ^= data[i];
+
+      byte msg_checksum = data[datalen + 3];
+
+#ifdef ENABLE_NIBE_DEBUG
+      if (debug) {
+        sprintf(debug_buf, "\nchecksum=%02X, msg_checksum=%02X\n", checksum, msg_checksum);
+        debug(4, debug_buf);
+      }
+#endif
+
+//      if (checksum != msg_checksum)
+//      {
+//        // if checksum is 0x5C (start character),
+//        // heat pump seems to send 0xC5 checksum
+//        if (checksum != 0xC0 && msg_checksum != 0x0C)
+//          return -2;
+//      }
+
+      return datalen + 4;
     }
   }
 

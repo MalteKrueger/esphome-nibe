@@ -52,6 +52,7 @@ enum eState
 {
   STATE_WAIT_START,
   STATE_WAIT_DATA,
+  STATE_WAIT_C0_DATA,
   STATE_OK_MESSAGE_RECEIVED,
   STATE_CRC_FAILURE,
 };
@@ -69,6 +70,7 @@ enum eTokenType
 #define MAX_DATA_LEN 128
 
 typedef std::function<void(const byte* const data, int len)> callback_msg_received_type;
+typedef std::function<void(const byte* const data, int len)> callback_msg_all_received_type;
 typedef std::function<int(eTokenType token, byte* data)> callback_msg_token_received_type;
 
 #ifdef ENABLE_NIBE_DEBUG
@@ -89,12 +91,14 @@ class NibeGw
     byte index;
     esphome::uart::UARTDevice* RS485;
     callback_msg_received_type callback_msg_received;
+    callback_msg_all_received_type callback_msg_all_received;
     callback_msg_token_received_type callback_msg_token_received;
     byte verbose;
     std::set<byte> addressAcknowledge;
     boolean sendAcknowledge;
 
     int checkNibeMessage(const byte* const data, byte len);
+    int checkNibeC0Message(const byte* const data, byte len);
     void sendData(const byte* const data, byte len);
     void sendAck();
     void sendNak();
@@ -107,7 +111,7 @@ class NibeGw
 
   public:
     NibeGw(esphome::uart::UARTDevice* serial, esphome::GPIOPin* RS485DirectionPin);
-    NibeGw& setCallback(callback_msg_received_type callback_msg_received, callback_msg_token_received_type callback_msg_token_received);
+    NibeGw& setCallback(callback_msg_received_type callback_msg_received, callback_msg_all_received_type callback_msg_all_received, callback_msg_token_received_type callback_msg_token_received);
 
     #ifdef ENABLE_NIBE_DEBUG
     NibeGw& setDebugCallback(callback_debug_type debug);

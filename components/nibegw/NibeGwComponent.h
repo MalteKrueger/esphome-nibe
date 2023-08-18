@@ -41,7 +41,8 @@ class NibeGwComponent: public esphome::Component, public esphome::uart::UARTDevi
     bool is_connected_ = false;
 
     std::vector<target_type> udp_targets_;
-    std::map<request_key_type, std::queue<request_data_type>> requests_; 
+    std::vector<target_type> udp_targets_all_;
+    std::map<request_key_type, std::queue<request_data_type>> requests_;
     std::map<request_key_type, request_data_type>             requests_const_; 
 
     NibeGw* gw_;
@@ -50,6 +51,7 @@ class NibeGwComponent: public esphome::Component, public esphome::uart::UARTDevi
     AsyncUDP udp_write_;
 
     void callback_msg_received(const byte* const data, int len);
+    void callback_msg_all_received(const byte* const data, int len);
     int callback_msg_token_received(eTokenType token, byte* data);
     void callback_debug(byte verbose, char* data);
 
@@ -64,6 +66,11 @@ class NibeGwComponent: public esphome::Component, public esphome::uart::UARTDevi
     {
         auto target = target_type(ip, port);
         udp_targets_.push_back(target);
+    }
+    void add_target_all(const network::IPAddress& ip, int port)
+    {
+        auto target = target_type(ip, port);
+        udp_targets_all_.push_back(target);
     }
 
     void add_source_ip(const network::IPAddress& ip){
