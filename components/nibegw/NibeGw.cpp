@@ -120,7 +120,7 @@ void NibeGw::loop()
           buffer[0] = b;
           index = 1;
           callback_msg_received(buffer, index);
-          state = STATE_WAIT_DATA;
+          state = STATE_WAIT_START;
         }
         if (b == 0x5C)
         {
