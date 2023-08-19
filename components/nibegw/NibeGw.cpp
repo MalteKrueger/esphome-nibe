@@ -364,7 +364,7 @@ int NibeGw::checkNibeC0Message(const byte* const data, byte len)
 
     if (len >= 4)
     {
-      int datalen = data[3];
+      int datalen = data[2];
 
       if (len < datalen + 4)
         return 0;
