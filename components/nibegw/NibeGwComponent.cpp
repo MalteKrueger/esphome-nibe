@@ -40,7 +40,8 @@ void NibeGwComponent::callback_msg_received(const byte* const data, int len)
     }
     for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++)
     {
-        if (!udp_read_.writeTo(data, len, (uint32_t)std::get<0>(*target), std::get<1>(*target))) {
+        ip_addr_t address = (ip_addr_t)std::get<0>(*target);
+        if (!udp_read_.writeTo(data, len, &address, std::get<1>(*target))) {
             ESP_LOGW(TAG, "UDP Packet send failed to %s:%d",
                      std::get<0>(*target).str().c_str(),
                      std::get<1>(*target));
@@ -57,7 +58,8 @@ void NibeGwComponent::callback_msg_all_received(const byte* const data, int len)
     ESP_LOGD(TAG, "UDP Packet with %d bytes to send", len);
     for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++)
     {
-        if (!udp_read_.writeTo(data, len, (uint32_t)std::get<0>(*target), std::get<1>(*target))) {
+        ip_addr_t address = (ip_addr_t)std::get<0>(*target);
+        if (!udp_read_.writeTo(data, len, &address, std::get<1>(*target))) {
             ESP_LOGW(TAG, "UDP Packet send failed to %s:%d",
                      std::get<0>(*target).str().c_str(),
                      std::get<1>(*target));
