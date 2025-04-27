@@ -54,6 +54,7 @@ enum eState {
   STATE_WAIT_ACK,
   STATE_OK_MESSAGE_RECEIVED,
   STATE_CRC_FAILURE,
+  STATE_CRC_FAILURE_SLAVE,
 };
 
 enum eTokenType {

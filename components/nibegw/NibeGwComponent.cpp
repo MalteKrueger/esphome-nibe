@@ -7,6 +7,7 @@ NibeGwComponent::NibeGwComponent(esphome::GPIOPin *dir_pin) {
   gw_ = new NibeGw(this, dir_pin);
   gw_->setCallback(
       std::bind(&NibeGwComponent::callback_msg_received, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&NibeGwComponent::callback_msg_all_received, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&NibeGwComponent::callback_msg_token_received, this, std::placeholders::_1, std::placeholders::_2));
 
   udp_read_.onPacket([this](AsyncUDPPacket packet) { token_request_cache(packet, MODBUS40, READ_TOKEN); });
@@ -42,6 +43,26 @@ void NibeGwComponent::callback_msg_received(const byte *const data, int len) {
 
   ESP_LOGD(TAG, "UDP Packet with %d bytes to send", len);
   for (auto target = udp_targets_.begin(); target != udp_targets_.end(); target++) {
+    ip_addr_t address = (ip_addr_t) std::get<0>(*target);
+    if (!udp_read_.writeTo(data, len, &address, std::get<1>(*target))) {
+      ESP_LOGW(TAG, "UDP Packet send failed to %s:%d", std::get<0>(*target).str().c_str(), std::get<1>(*target));
+    }
+  }
+  for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++) {
+    ip_addr_t address = (ip_addr_t) std::get<0>(*target);
+    if (!udp_read_.writeTo(data, len, &address, std::get<1>(*target))) {
+      ESP_LOGW(TAG, "UDP Packet send failed to %s:%d", std::get<0>(*target).str().c_str(), std::get<1>(*target));
+    }
+  }
+}
+
+void NibeGwComponent::callback_msg_all_received(const byte *const data, int len) {
+  if (!is_connected_) {
+    return;
+  }
+
+  ESP_LOGD(TAG, "UDP Packet with %d bytes to send", len);
+  for (auto target = udp_targets_all_.begin(); target != udp_targets_all_.end(); target++) {
     ip_addr_t address = (ip_addr_t) std::get<0>(*target);
     if (!udp_read_.writeTo(data, len, &address, std::get<1>(*target))) {
       ESP_LOGW(TAG, "UDP Packet send failed to %s:%d", std::get<0>(*target).str().c_str(), std::get<1>(*target));

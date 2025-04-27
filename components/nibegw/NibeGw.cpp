@@ -88,8 +88,8 @@ void NibeGw::loop() {
         buffer[0] = buffer[1];
         buffer[1] = b;
 
-        if (buffer[0] == STARTBYTE_MASTER) {
-          if (buffer[1] == STARTBYTE_MASTER) {
+        if (buffer[0] == STARTBYTE_MASTER || buffer[0] == STARTBYTE_SLAVE) {
+          if (buffer[1] == buffer[0]) {
             buffer[1] = 0x00;
             state = STATE_WAIT_START;
             ESP_LOGVV(TAG, "Ignore double start");
@@ -142,6 +142,9 @@ void NibeGw::loop() {
             case -2:
               state = STATE_CRC_FAILURE;
               break;  // Checksum error
+            case -3:
+              state = STATE_CRC_FAILURE_SLAVE;
+              break;  // Checksum error
             default:
               state = STATE_OK_MESSAGE_RECEIVED;
               break;
@@ -168,6 +171,12 @@ void NibeGw::loop() {
       state = STATE_WAIT_START;
       break;
 
+    case STATE_CRC_FAILURE_SLAVE:
+
+      ESP_LOGW(TAG, "Had CRC failure for slave message");
+      state = STATE_WAIT_START;
+      break;
+
     case STATE_OK_MESSAGE_RECEIVED:
       if (!shouldAckNakSend(buffer[2])) {
         state = STATE_WAIT_START;
@@ -175,20 +184,22 @@ void NibeGw::loop() {
       }
 
       state = STATE_WAIT_START;
-      if (buffer[0] == STARTBYTE_MASTER && buffer[4] == 0x00) {
-        int msglen = callback_msg_token_received((eTokenType) (buffer[3]), buffer);
-        if (msglen > 0) {
-          sendData(buffer, (byte) msglen);
-          state = STATE_WAIT_ACK;
-          ESP_LOGVV(TAG, "Responded to token %02X", buffer[3]);
+      if (buffer[0] == STARTBYTE_MASTER) {
+        if ( buffer[4] == 0x00) {
+          int msglen = callback_msg_token_received((eTokenType) (buffer[3]), buffer);
+          if (msglen > 0) {
+            sendData(buffer, (byte) msglen);
+            state = STATE_WAIT_ACK;
+            ESP_LOGVV(TAG, "Responded to token %02X", buffer[3]);
+          } else {
+            sendAck();
+            ESP_LOGVV(TAG, "Had no response to token %02X ", buffer[3]);
+          }
         } else {
           sendAck();
-          ESP_LOGVV(TAG, "Had no response to token %02X ", buffer[3]);
         }
-      } else {
-        sendAck();
+        break;
       }
-      break;
   }
 }
 
@@ -204,33 +215,62 @@ int NibeGw::checkNibeMessage(const byte *const data, byte len) {
     return 0;
 
   if (len >= 1) {
-    if (data[0] != STARTBYTE_MASTER)
-      return -1;
+    if (data[0] == STARTBYTE_MASTER){
 
-    if (len >= 6) {
-      int datalen = data[4];
+      if (len >= 6) {
+        int datalen = data[4];
 
-      if (len < datalen + 6)
-        return 0;
+        if (len < datalen + 6)
+          return 0;
 
-      byte checksum = 0;
+        byte checksum = 0;
 
-      // calculate XOR checksum
-      for (int i = 1; i < (datalen + 5); i++)
-        checksum ^= data[i];
+        // calculate XOR checksum
+        for (int i = 1; i < (datalen + 5); i++)
+          checksum ^= data[i];
 
-      byte msg_checksum = data[datalen + 5];
+        byte msg_checksum = data[datalen + 5];
 
-      ESP_LOGVV(TAG, "checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
+        ESP_LOGVV(TAG, "MASTER checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
 
-      if (checksum != msg_checksum) {
-        // if checksum is 0x5C (start character),
-        // heat pump seems to send 0xC5 checksum
-        if (checksum != 0x5C && msg_checksum != 0xC5)
-          return -2;
+        if (checksum != msg_checksum) {
+          // if checksum is 0x5C (start character),
+          // heat pump seems to send 0xC5 checksum
+          if (checksum != 0x5C && msg_checksum != 0xC5)
+            return -2;
+        }
+
+        return datalen + 6;
       }
+    } else if (data[0] == STARTBYTE_SLAVE){
 
-      return datalen + 6;
+      if (len >= 4) {
+        int datalen = data[2];
+
+        if (len < datalen + 4)
+          return 0;
+
+        byte checksum = 0;
+
+        // calculate XOR checksum
+        for (int i = 1; i < (datalen + 3); i++)
+          checksum ^= data[i];
+
+        byte msg_checksum = data[datalen + 3];
+
+        ESP_LOGVV(TAG, "SLAVE checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
+
+        //if (checksum != msg_checksum) {
+        //  // if checksum is 0x5C (start character),
+        //  // heat pump seems to send 0xC5 checksum
+        //  if (checksum != 0x5C && msg_checksum != 0xC5)
+        //    return -3;
+        //}
+
+        return datalen + 4;
+      }
+    } else {
+      return -1;
     }
   }
 
