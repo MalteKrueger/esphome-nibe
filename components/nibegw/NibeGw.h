@@ -118,6 +118,7 @@ class NibeGw {
  public:
   NibeGw(esphome::uart::UARTDevice *serial, esphome::GPIOPin *RS485DirectionPin);
   NibeGw &setCallback(callback_msg_received_type callback_msg_received,
+                      callback_msg_all_received_type callback_msg_all_received,
                       callback_msg_token_received_type callback_msg_token_received);
 
   void connect();
