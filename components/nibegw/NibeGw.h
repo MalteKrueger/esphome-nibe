@@ -96,6 +96,7 @@ class NibeGw {
   byte index;
   esphome::uart::UARTDevice *RS485;
   callback_msg_received_type callback_msg_received;
+  callback_msg_all_received_type callback_msg_all_received;
   callback_msg_token_received_type callback_msg_token_received;
   std::set<byte> addressAcknowledge;
   boolean sendAcknowledge;
