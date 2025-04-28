@@ -77,6 +77,7 @@ enum eStartByte {
 #define MAX_DATA_LEN 128
 
 typedef std::function<void(const byte *const data, int len)> callback_msg_received_type;
+typedef std::function<void(const byte *const data, int len)> callback_msg_all_received_type;
 typedef std::function<int(eTokenType token, byte *data)> callback_msg_token_received_type;
 
 #define SMS40 0x16
