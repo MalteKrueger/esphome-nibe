@@ -167,7 +167,7 @@ void NibeGw::loop() {
       break;
 
     case STATE_CRC_FAILURE:
-      if (shouldAckNakSend(buffer[2]))
+      if (buffer[0] == STARTBYTE_MASTER && shouldAckNakSend(buffer[2]))
         sendNak();
       ESP_LOGW(TAG, "Had CRC failure");
       state = STATE_WAIT_START;
@@ -180,7 +180,7 @@ void NibeGw::loop() {
       break;
 
     case STATE_OK_MESSAGE_RECEIVED:
-      if (!shouldAckNakSend(buffer[2])) {
+      if (buffer[0] == STARTBYTE_MASTER && !shouldAckNakSend(buffer[2])) {
         state = STATE_WAIT_START;
         break;
       }
