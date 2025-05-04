@@ -166,7 +166,7 @@ void NibeGw::loop() {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
             //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
-            ESP_LOGD(TAG, "Message of %hhu bytes received from heat pump: %s", msglen, debug_buf);
+            ESP_LOGD(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
 #endif
 
             callback_msg_received(buffer, index);
