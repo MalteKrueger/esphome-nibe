@@ -85,8 +85,8 @@ void NibeGw::loop() {
     case STATE_WAIT_START:
       if (RS485->available() > 0) {
         byte b = RS485->read();
-        //ESP_LOGVV(TAG, "%02X", b);
-        ESP_LOGD(TAG, "%02X", b);
+        ESP_LOGVV(TAG, "%02X", b);
+        //ESP_LOGD(TAG, "%02X", b);
 
         buffer[0] = buffer[1];
         buffer[1] = b;
@@ -110,7 +110,7 @@ void NibeGw::loop() {
     case STATE_WAIT_ACK:
       if (RS485->available() > 0) {
         byte b = RS485->read();
-        ESP_LOGD(TAG, "%02X", b);
+        ESP_LOGDVV(TAG, "%02X", b);
 
         if (b == STARTBYTE_ACK) {
           ESP_LOGV(TAG, "Ack seen");
@@ -130,8 +130,8 @@ void NibeGw::loop() {
     case STATE_WAIT_DATA:
       if (RS485->available() > 0) {
         byte b = RS485->read();
-        //ESP_LOGVV(TAG, "%02X", b);
-        ESP_LOGD(TAG, "%02X", b);
+        ESP_LOGVV(TAG, "%02X", b);
+        //ESP_LOGD(TAG, "%02X", b);
 
         if (index >= MAX_DATA_LEN) {
           // too long message
