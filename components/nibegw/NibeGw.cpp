@@ -182,11 +182,11 @@ void NibeGw::loop() {
       ESP_LOGW(TAG, "Had CRC failure");
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
 //#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
-            for (byte i = 0; i < msglen && i < DEBUG_BUFFER_LEN / 3; i++) {
+            for (byte i = 0; i < index && i < DEBUG_BUFFER_LEN / 3; i++) {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
-            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
-            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", index, debug_buf);
+            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", index, debug_buf);
 #endif
       state = STATE_WAIT_START;
       break;
@@ -196,11 +196,11 @@ void NibeGw::loop() {
       ESP_LOGW(TAG, "Had CRC failure for slave message");
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
 //#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
-            for (byte i = 0; i < msglen && i < DEBUG_BUFFER_LEN / 3; i++) {
+            for (byte i = 0; i < index && i < DEBUG_BUFFER_LEN / 3; i++) {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
-            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
-            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", index, debug_buf);
+            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", index, debug_buf);
 #endif
       state = STATE_WAIT_START;
       break;
