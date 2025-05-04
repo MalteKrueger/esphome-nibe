@@ -167,6 +167,7 @@ void NibeGw::loop() {
 #endif
 
             callback_msg_received(buffer, index);
+            callback_msg_all_received(buffer, index);
           }
         }
       }
@@ -186,30 +187,29 @@ void NibeGw::loop() {
       break;
 
     case STATE_OK_MESSAGE_RECEIVED:
-      if (buffer[0] == STARTBYTE_MASTER && !shouldAckNakSend(buffer[2])) {
+      if (buffer[0] == STARTBYTE_SLAVE || !shouldAckNakSend(buffer[2])) {
         state = STATE_WAIT_START;
         break;
       }
 
       state = STATE_WAIT_START;
-      if (buffer[0] == STARTBYTE_MASTER) {
-        if ( buffer[4] == 0x00) {
-          int msglen = callback_msg_token_received((eTokenType) (buffer[3]), buffer);
-          if (msglen > 0) {
-            sendData(buffer, (byte) msglen);
-            state = STATE_WAIT_ACK;
-            //ESP_LOGVV(TAG, "Responded to token %02X", buffer[3]);
-            ESP_LOGD(TAG, "Responded to token %02X", buffer[3]);
-          } else {
-            sendAck();
-            //ESP_LOGVV(TAG, "Had no response to token %02X ", buffer[3]);
-            ESP_LOGD(TAG, "Had no response to token %02X ", buffer[3]);
-          }
+
+      if ( buffer[4] == 0x00) {
+        int msglen = callback_msg_token_received((eTokenType) (buffer[3]), buffer);
+        if (msglen > 0) {
+          sendData(buffer, (byte) msglen);
+          state = STATE_WAIT_ACK;
+          //ESP_LOGVV(TAG, "Responded to token %02X", buffer[3]);
+          ESP_LOGD(TAG, "Responded to token %02X", buffer[3]);
         } else {
           sendAck();
+          //ESP_LOGVV(TAG, "Had no response to token %02X ", buffer[3]);
+          ESP_LOGD(TAG, "Had no response to token %02X ", buffer[3]);
         }
-        break;
+      } else {
+        sendAck();
       }
+      break;
   }
 }
 
