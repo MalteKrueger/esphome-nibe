@@ -139,8 +139,8 @@ void NibeGw::loop() {
         } else {
           buffer[index++] = b;
           int msglen = checkNibeMessage(buffer, index);
-          ESP_LOGVV(TAG, "checkMsg=%d", msglen);
-          //ESP_LOGD(TAG, "checkMsg=%d", msglen);
+          ESP_LOGVV(TAG, "checkMsg=%u", msglen);
+          //ESP_LOGD(TAG, "checkMsg=%u", msglen);
 
           switch (msglen) {
             case 0:
@@ -166,7 +166,7 @@ void NibeGw::loop() {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
             //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
-            ESP_LOGD(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            ESP_LOGD(TAG, "Message of %u bytes received from heat pump: %s", msglen, debug_buf);
 #endif
 
             callback_msg_received(buffer, index);
@@ -186,7 +186,7 @@ void NibeGw::loop() {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
             //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", index, debug_buf);
-            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", index, debug_buf);
+            ESP_LOGD(TAG, "CRC Error for Message of %u bytes received from heat pump: %s", index, debug_buf);
 #endif
       state = STATE_WAIT_START;
       break;
@@ -200,7 +200,7 @@ void NibeGw::loop() {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
             //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", index, debug_buf);
-            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", index, debug_buf);
+            ESP_LOGD(TAG, "CRC Error for Message of %u bytes received from heat pump: %s", index, debug_buf);
 #endif
       state = STATE_WAIT_START;
       break;
@@ -339,7 +339,7 @@ void NibeGw::sendData(const byte *const data, byte len) {
     sprintf(debug_buf + i * 3, "%02X ", data[i]);
   }
   //ESP_LOGVV(TAG, "Sent message of %d bytes to heat pump: %s", len, debug_buf);
-  ESP_LOGD(TAG, "Sent message of %d bytes to heat pump: %s", len, debug_buf);
+  ESP_LOGD(TAG, "Sent message of %u bytes to heat pump: %s", len, debug_buf);
 #endif
 }
 
