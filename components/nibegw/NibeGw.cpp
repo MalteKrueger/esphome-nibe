@@ -114,8 +114,10 @@ void NibeGw::loop() {
 
         if (b == STARTBYTE_ACK) {
           ESP_LOGV(TAG, "Ack seen");
+          callback_msg_all_received([STARTBYTE_ACK], len);
         } else if (b == STARTBYTE_NACK) {
           ESP_LOGV(TAG, "Nack seen");
+          callback_msg_all_received([STARTBYTE_NACK], len);
         } else {
           ESP_LOGW(TAG, "Unexpected Ack/Nack: %02X", b);
         }
@@ -312,6 +314,8 @@ void NibeGw::sendData(const byte *const data, byte len) {
   sendBegin();
   RS485->write_array(data, len);
   sendEnd();
+  callback_msg_all_received(data, len);
+
 
 //#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
@@ -329,6 +333,7 @@ void NibeGw::sendAck() {
   sendEnd();
   //ESP_LOGVV(TAG, "Sent ACK");
   ESP_LOGD(TAG, "Sent ACK");
+  callback_msg_all_received([STARTBYTE_ACK], len);
 }
 
 void NibeGw::sendNak() {
@@ -337,6 +342,7 @@ void NibeGw::sendNak() {
   sendEnd();
   //ESP_LOGVV(TAG, "Sent NACK");
   ESP_LOGD(TAG, "Sent NACK");
+  callback_msg_all_received([STARTBYTE_NACK], len);
 }
 
 boolean NibeGw::shouldAckNakSend(byte address) {
