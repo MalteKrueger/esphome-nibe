@@ -114,10 +114,10 @@ void NibeGw::loop() {
 
         if (b == STARTBYTE_ACK) {
           ESP_LOGV(TAG, "Ack seen");
-          callback_msg_all_received(&STARTBYTE_ACK, 1);
+          callback_msg_all_received(ACK_MSG_ARRAY, 1);
         } else if (b == STARTBYTE_NACK) {
           ESP_LOGV(TAG, "Nack seen");
-          callback_msg_all_received(&STARTBYTE_NACK, 1);
+          callback_msg_all_received(NACK_MSG_ARRAY, 1);
         } else {
           ESP_LOGW(TAG, "Unexpected Ack/Nack: %02X", b);
         }
@@ -333,7 +333,7 @@ void NibeGw::sendAck() {
   sendEnd();
   //ESP_LOGVV(TAG, "Sent ACK");
   ESP_LOGD(TAG, "Sent ACK");
-  callback_msg_all_received(&STARTBYTE_ACK, 1);
+  callback_msg_all_received(ACK_MSG_ARRAY, 1);
 }
 
 void NibeGw::sendNak() {
@@ -342,7 +342,7 @@ void NibeGw::sendNak() {
   sendEnd();
   //ESP_LOGVV(TAG, "Sent NACK");
   ESP_LOGD(TAG, "Sent NACK");
-  callback_msg_all_received(&STARTBYTE_NACK&, 1);
+  callback_msg_all_received(NACK_MSG_ARRAY, 1);
 }
 
 boolean NibeGw::shouldAckNakSend(byte address) {
