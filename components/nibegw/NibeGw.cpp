@@ -85,7 +85,8 @@ void NibeGw::loop() {
     case STATE_WAIT_START:
       if (RS485->available() > 0) {
         byte b = RS485->read();
-        ESP_LOGVV(TAG, "%02X", b);
+        //ESP_LOGVV(TAG, "%02X", b);
+        ESP_LOGD(TAG, "%02X", b);
 
         buffer[0] = buffer[1];
         buffer[1] = b;
@@ -94,11 +95,13 @@ void NibeGw::loop() {
           if (buffer[1] == buffer[0]) {
             buffer[1] = 0x00;
             state = STATE_WAIT_START;
-            ESP_LOGVV(TAG, "Ignore double start");
+            //ESP_LOGVV(TAG, "Ignore double start");
+            ESP_LOGDTAG, "Ignore double start");
           } else {
             index = 2;
             state = STATE_WAIT_DATA;
-            ESP_LOGVV(TAG, "Frame start found");
+            //ESP_LOGVV(TAG, "Frame start found");
+            ESP_LOGD(TAG, "Frame start found");
           }
         }
       }
@@ -133,7 +136,8 @@ void NibeGw::loop() {
         } else {
           buffer[index++] = b;
           int msglen = checkNibeMessage(buffer, index);
-          ESP_LOGVV(TAG, "checkMsg=%d", msglen);
+          //ESP_LOGVV(TAG, "checkMsg=%d", msglen);
+          ESP_LOGD(TAG, "checkMsg=%d", msglen);
 
           switch (msglen) {
             case 0:
@@ -153,11 +157,13 @@ void NibeGw::loop() {
           }
 
           if (msglen) {
-#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
+//#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
             for (byte i = 0; i < msglen && i < DEBUG_BUFFER_LEN / 3; i++) {
               sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
             }
-            ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            ESP_LOGD(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
 #endif
 
             callback_msg_received(buffer, index);
@@ -192,10 +198,12 @@ void NibeGw::loop() {
           if (msglen > 0) {
             sendData(buffer, (byte) msglen);
             state = STATE_WAIT_ACK;
-            ESP_LOGVV(TAG, "Responded to token %02X", buffer[3]);
+            //ESP_LOGVV(TAG, "Responded to token %02X", buffer[3]);
+            ESP_LOGD(TAG, "Responded to token %02X", buffer[3]);
           } else {
             sendAck();
-            ESP_LOGVV(TAG, "Had no response to token %02X ", buffer[3]);
+            //ESP_LOGVV(TAG, "Had no response to token %02X ", buffer[3]);
+            ESP_LOGD(TAG, "Had no response to token %02X ", buffer[3]);
           }
         } else {
           sendAck();
@@ -233,7 +241,8 @@ int NibeGw::checkNibeMessage(const byte *const data, byte len) {
 
         byte msg_checksum = data[datalen + 5];
 
-        ESP_LOGVV(TAG, "MASTER checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
+        //ESP_LOGVV(TAG, "MASTER checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
+        ESP_LOGD(TAG, "MASTER checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
 
         if (checksum != msg_checksum) {
           // if checksum is 0x5C (start character),
@@ -260,7 +269,8 @@ int NibeGw::checkNibeMessage(const byte *const data, byte len) {
 
         byte msg_checksum = data[datalen + 3];
 
-        ESP_LOGVV(TAG, "SLAVE checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
+        //ESP_LOGVV(TAG, "SLAVE checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
+        ESP_LOGD(TAG, "SLAVE checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
 
         //if (checksum != msg_checksum) {
         //  // if checksum is 0x5C (start character),
@@ -299,11 +309,13 @@ void NibeGw::sendData(const byte *const data, byte len) {
   RS485->write_array(data, len);
   sendEnd();
 
-#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+//#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
   for (byte i = 0; i < len && i < DEBUG_BUFFER_LEN / 3; i++) {
     sprintf(debug_buf + i * 3, "%02X ", data[i]);
   }
-  ESP_LOGVV(TAG, "Sent message of %d bytes to heat pump: %s", len, debug_buf);
+  //ESP_LOGVV(TAG, "Sent message of %d bytes to heat pump: %s", len, debug_buf);
+  ESP_LOGD(TAG, "Sent message of %d bytes to heat pump: %s", len, debug_buf);
 #endif
 }
 
@@ -311,14 +323,16 @@ void NibeGw::sendAck() {
   sendBegin();
   RS485->write_byte(STARTBYTE_ACK);
   sendEnd();
-  ESP_LOGVV(TAG, "Sent ACK");
+  //ESP_LOGVV(TAG, "Sent ACK");
+  ESP_LOGD(TAG, "Sent ACK");
 }
 
 void NibeGw::sendNak() {
   sendBegin();
   RS485->write_byte(STARTBYTE_NACK);
   sendEnd();
-  ESP_LOGVV(TAG, "Sent NACK");
+  //ESP_LOGVV(TAG, "Sent NACK");
+  ESP_LOGD(TAG, "Sent NACK");
 }
 
 boolean NibeGw::shouldAckNakSend(byte address) {
