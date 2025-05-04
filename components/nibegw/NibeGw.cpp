@@ -137,8 +137,8 @@ void NibeGw::loop() {
         } else {
           buffer[index++] = b;
           int msglen = checkNibeMessage(buffer, index);
-          //ESP_LOGVV(TAG, "checkMsg=%d", msglen);
-          ESP_LOGD(TAG, "checkMsg=%d", msglen);
+          ESP_LOGVV(TAG, "checkMsg=%d", msglen);
+          //ESP_LOGD(TAG, "checkMsg=%d", msglen);
 
           switch (msglen) {
             case 0:
@@ -188,6 +188,9 @@ void NibeGw::loop() {
       break;
 
     case STATE_OK_MESSAGE_RECEIVED:
+      if (buffer[0] == STARTBYTE_SLAVE) {
+        state == STATE_WAIT_ACK;
+      }
       if (buffer[0] == STARTBYTE_SLAVE || !shouldAckNakSend(buffer[2])) {
         state = STATE_WAIT_START;
         break;
