@@ -180,12 +180,28 @@ void NibeGw::loop() {
       if (buffer[0] == STARTBYTE_MASTER && shouldAckNakSend(buffer[2]))
         sendNak();
       ESP_LOGW(TAG, "Had CRC failure");
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
+//#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+            for (byte i = 0; i < msglen && i < DEBUG_BUFFER_LEN / 3; i++) {
+              sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
+            }
+            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+#endif
       state = STATE_WAIT_START;
       break;
 
     case STATE_CRC_FAILURE_SLAVE:
 
       ESP_LOGW(TAG, "Had CRC failure for slave message");
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_DEBUG
+//#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+            for (byte i = 0; i < msglen && i < DEBUG_BUFFER_LEN / 3; i++) {
+              sprintf(debug_buf + i * 3, "%02X ", buffer[i]);
+            }
+            //ESP_LOGVV(TAG, "Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+            ESP_LOGD(TAG, "CRC Error for Message of %d bytes received from heat pump: %s", msglen, debug_buf);
+#endif
       state = STATE_WAIT_START;
       break;
 
@@ -278,12 +294,12 @@ int NibeGw::checkNibeMessage(const byte *const data, byte len) {
         //ESP_LOGVV(TAG, "SLAVE checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
         ESP_LOGD(TAG, "SLAVE checksum=%02X, msg_checksum=%02X", checksum, msg_checksum);
 
-        //if (checksum != msg_checksum) {
+        if (checksum != msg_checksum) {
         //  // if checksum is 0x5C (start character),
         //  // heat pump seems to send 0xC5 checksum
         //  if (checksum != 0x5C && msg_checksum != 0xC5)
-        //    return -3;
-        //}
+            return -3;
+        }
 
         return datalen + 4;
       }
