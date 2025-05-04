@@ -111,7 +111,8 @@ class NibeGw {
   boolean shouldAckNakSend(byte address);
 
   const char *TAG = "nibeGW";
-#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+//#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_DEBUG
 #define DEBUG_BUFFER_LEN 300
   char debug_buf[DEBUG_BUFFER_LEN];
 #endif
