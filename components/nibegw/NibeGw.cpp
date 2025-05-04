@@ -96,7 +96,7 @@ void NibeGw::loop() {
             buffer[1] = 0x00;
             state = STATE_WAIT_START;
             //ESP_LOGVV(TAG, "Ignore double start");
-            ESP_LOGDTAG, "Ignore double start");
+            ESP_LOGD(TAG, "Ignore double start");
           } else {
             index = 2;
             state = STATE_WAIT_DATA;
