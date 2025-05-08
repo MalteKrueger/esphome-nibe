@@ -90,7 +90,6 @@ void NibeGw::loop() {
 
         buffer[0] = buffer[1];
         buffer[1] = b;
-
         if (buffer[0] == STARTBYTE_MASTER || buffer[0] == STARTBYTE_SLAVE) {
           if (buffer[1] == buffer[0]) {
             buffer[1] = 0x00;
@@ -102,6 +101,14 @@ void NibeGw::loop() {
             state = STATE_WAIT_DATA;
             //ESP_LOGVV(TAG, "Frame start found");
             ESP_LOGD(TAG, "Frame start found");
+          }
+        } else {
+          if (b == STARTBYTE_ACK) {
+            ESP_LOGV(TAG, "Ack seen");
+            callback_msg_all_received(ACK_MSG_ARRAY, 1);
+          } else if (b == STARTBYTE_NACK) {
+            ESP_LOGV(TAG, "Nack seen");
+            callback_msg_all_received(NACK_MSG_ARRAY, 1);
           }
         }
       }
@@ -207,8 +214,12 @@ void NibeGw::loop() {
       break;
 
     case STATE_OK_MESSAGE_RECEIVED:
-      if (buffer[0] == STARTBYTE_SLAVE || !shouldAckNakSend(buffer[2])) {
+      if(buffer[0] == STARTBYTE_SLAVE) {
         state = STATE_WAIT_ACK;
+        break;
+      }
+      if (!shouldAckNakSend(buffer[2])) {
+        state = STATE_WAIT_START;
         break;
       }
 
