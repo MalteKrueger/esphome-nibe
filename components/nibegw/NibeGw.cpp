@@ -111,6 +111,11 @@ void NibeGw::loop() {
       if (RS485->available() > 0) {
         byte b = RS485->read();
         ESP_LOGVV(TAG, "%02X", b);
+        buffer[1] = b;
+        state=STATE_PROCESS_ACK;
+        break;
+
+    case STATE_PROCESS_ACK:
 
         if (b == STARTBYTE_ACK) {
           ESP_LOGV(TAG, "Ack seen");
@@ -123,7 +128,7 @@ void NibeGw::loop() {
         }
 
         state = STATE_WAIT_START;
-        buffer[1] = b;
+
       }
       break;
 
@@ -206,11 +211,8 @@ void NibeGw::loop() {
       break;
 
     case STATE_OK_MESSAGE_RECEIVED:
-      if (buffer[0] == STARTBYTE_SLAVE) {
-        state == STATE_WAIT_ACK;
-      }
       if (buffer[0] == STARTBYTE_SLAVE || !shouldAckNakSend(buffer[2])) {
-        state = STATE_WAIT_START;
+        state = STATE_WAIT_ACK;
         break;
       }
 
