@@ -112,10 +112,6 @@ void NibeGw::loop() {
         byte b = RS485->read();
         ESP_LOGVV(TAG, "%02X", b);
         buffer[1] = b;
-        state=STATE_PROCESS_ACK;
-        break;
-
-    case STATE_PROCESS_ACK:
 
         if (b == STARTBYTE_ACK) {
           ESP_LOGV(TAG, "Ack seen");
